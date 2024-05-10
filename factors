@@ -1,29 +1,49 @@
-#!/usr/bin/env python
+#!/usr/bin/env bash
+# is a factors challenge
 
-import subprocess
-import sys
+check_factor()
+{
+	if [ $# -ne 3 ];
+        then
+                args=("$@")
+                count=0
+                num2=1
+                for a in ${args[*]};
+                do
+                        if [ $count -gt 1 ];
+                        then
+                                num2=$(echo $a*$num2 | bc)
+                        fi
+                        count=$((count + 1))
+                done
+        else
+                num2=$3
+        fi
 
-def check_factor(num1, num2, num3):
-    if num3 is None:
-        product = num1 * num2
-    else:
-        product = num3
+        num1=$2
+        num=$(echo "$1" | tr ':' '=')
 
-    num = f"{num1}={num2}*{product}"
-    print(num)
+        result=$(echo "if($num2 > $num1) 1 else 0" | bc)
+	        if ((result == 1)); then
+		        numcp=$num1
+		        num1=$num2
+		        num2=$numcp
+                fi
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print('Usage: factors <file>')
-        sys.exit(1)
+        echo "$num$num1*$num2"
+}
 
-    input_file = sys.argv[1]
-    with open(input_file, 'r') as file:
-        for line in file:
-            number = int(line)
-            factor_output = subprocess.check_output(["factor", str(number)]).decode("utf-8").strip()
-            factors = list(map(int, factor_output.split(":")[1].split()))
-            if len(factors) == 2:
-                check_factor(number, factors[0], factors[1])
-            else:
-                check_factor(number, factors[0], None)
+if [ $# -ne 1 ]
+then
+        echo 'Usage: factors <file>'
+        exit 1
+else
+
+        while read i
+        do
+
+                result=$(factor "$i")
+                check_factor $result
+
+        done < "$1"
+fi
